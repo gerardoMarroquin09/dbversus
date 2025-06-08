@@ -5,6 +5,6 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 
-COPY script.js ./
+COPY init-script.js ./
 
-CMD ["node", "script.js"]
+CMD ["node", "init-script.js"]

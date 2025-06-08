@@ -1,0 +1,27 @@
+# Este es el docker compose para levantar un contenedor de Oracle
+# falta probar
+
+# COMANDO
+# docker compose -f ./oracle/docker-compose.yml up -d
+
+
+services:
+  oracle:
+    image: gvenzl/oracle-free:23.5-amd64
+    container_name: oracle
+    restart: unless-stopped
+    environment:
+      ORACLE_PASSWORD: "oracle"  # Contraseña de SYS y SYSTEM
+    ports:
+      - "1521:1521"  # Puerto de Oracle
+    volumes:
+      - ./cafeteria.sql:/docker-entrypoint-initdb.d/cafeteria.sql  # Importación del archivo SQL
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '1'
+          memory: 1G    
+

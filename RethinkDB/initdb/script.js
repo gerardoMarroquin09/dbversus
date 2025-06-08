@@ -1,6 +1,5 @@
 import r from 'rethinkdb';
 
-
 export async function initializeDatabase() {
     let conn;
     try {

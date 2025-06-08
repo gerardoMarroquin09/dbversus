@@ -7,13 +7,16 @@
 version: '3.1'
 services:
   appversus:
-    image: calderonperaza/dbversusapp:1.1
+    image: calderonperaza/dbversusapp:1.0
     container_name: appversus
     restart: unless-stopped    
     ports:
       - "3000:3000"
     environment:
-      - HOST_DB=mysql
+      - HOST_DB=couchdb
+    # depends_on:
+    #   scylla:
+    #     condition: service_healthy
     deploy:
           resources:
             limits:
@@ -23,25 +26,47 @@ services:
               cpus: '1'
               memory: 1G
 #SI LA BASE DE DATOS ES MYSQL
-  mysql:
-    image: mysql:8.0-debian
-    container_name: mysql
-    restart: unless-stopped
-    environment:
-      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"      
-      MYSQL_DATABASE: cafeteria      
-    ports:
-      - "3306:3306"
-    volumes:
-      - ../mysql/cafeteria.sql:/docker-entrypoint-initdb.d/cafeteria.sql
-    deploy:
-          resources:
-            limits:
-              cpus: '1'
-              memory: 1G
-            reservations:
-              cpus: '1'
-              memory: 1G
+  # mysql:
+  #   image: mysql:8.0-debian
+  #   container_name: mysql
+  #   restart: unless-stopped
+  #   environment:
+  #     MYSQL_ALLOW_EMPTY_PASSWORD: "yes"      
+  #     MYSQL_DATABASE: cafeteria      
+  #   ports:
+  #     - "3306:3306"
+  #   volumes:
+  #     - ../mysql/cafeteria.sql:/docker-entrypoint-initdb.d/cafeteria.sql
+  #   deploy:
+  #         resources:
+  #           limits:
+  #             cpus: '1'
+  #             memory: 1G
+  #           reservations:
+  #             cpus: '1'
+  #             memory: 1G
+  #SI LA BASE DE DATOS ES COUCHDB
+  # couchdb:
+  #   image: couchdb:3.1.1
+  #   container_name: couchdb
+  #   restart: unless-stopped
+  #   environment:
+  #     COUCHDB_USER: admin
+  #     COUCHDB_PASSWORD: password
+  #   ports:
+  #     - "5984:5984"
+  #   volumes:
+  #     - ../couchdb/entrypoint.sh:/entrypoint.sh
+  #     - ../couchdb/init-couchdb.sh:/init-couchdb.sh
+  #   entrypoint: [ "sh", "/entrypoint.sh" ]
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         cpus: '1'
+  #         memory: 1G
+  #       reservations:
+  #         cpus: '1'
+  #         memory: 1G
   #SI LA BASE DE DATOS ES MONGODB
   # mongodb:
   #   image: mongo:6.0
@@ -61,3 +86,172 @@ services:
   #       reservations:
   #         cpus: '1'
   #         memory: 1G
+# #SI LA BASE DE DATOS ES SCYLLADB
+#   scylla:
+#     image: scylladb/scylla:latest
+#     container_name: scylla_container
+#     restart: unless-stopped
+#     ports:
+#       - "9042:9042"
+#     command: --smp 1 --memory 500M --developer-mode 1
+#     healthcheck:
+#       test: ["CMD-SHELL", "nodetool status || exit 1"]
+#       interval: 30s
+#       timeout: 10s
+#       retries: 5
+#       start_period: 30s
+#     environment:
+#       - SCYLLA_DEVELOPER_MODE=1
+#     deploy:
+#       resources:
+#         limits:
+#           cpus: '1'
+#           memory: 1G
+#         reservations:
+#           cpus: '1'
+#           memory: 1G
+#     networks:
+#       - scylla-net
+#     volumes:
+#       - scylla_data:/var/lib/scylla
+
+# networks:
+#   scylla-net:
+#     driver: bridge
+
+# volumes:
+#   scylla_data:
+# #SI LA BASE ES RETHINKDB
+  # rethinkdb:
+  #   image: rethinkdb:2.4
+  #   container_name: rethinkdb
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8080:8080"
+  #     - "28015:28015"
+  #     - "29015:29015"
+
+  # initdb:
+  #   build: ../RethinkDB/initdb
+  #   depends_on:
+  #     - rethinkdb
+# SI LA BASE ES MARIADB
+ # mariadb:
+ #   image: mariadb:latest
+ #   container_name: mariadb
+ #   restart: unless-stopped
+ #   environment:
+ #     MYSQL_ROOT_PASSWORD: 'root'    
+ #     MMYSQL_USER: 'admin'
+ #     MYSQL_PASSWORD: 'admin'
+ #     MYSQL_DATABASE: 'cafeteria'     
+ #   ports:
+ #     - "3306:3306"
+ #   volumes:
+ #     - ../mariadb/cafeteria.sql:/docker-entrypoint-initdb.d/cafeteria.sql
+ #   deploy:
+ #         resources:
+ #           limits:
+ #             cpus: '1'
+ #             memory: 1G
+ #           reservations:
+ #             cpus: '1'
+ #             memory: 1G
+
+ #SI LA BASE DE DATOS ES ORACLE
+  # oracle:
+  #   image: gvenzl/oracle-free:23.5-amd64
+  #   container_name: oracle
+  #   restart: unless-stopped
+  #   environment:
+  #     ORACLE_PASSWORD: "oracle"  # Contraseña de SYS y SYSTEM
+  #   ports:
+  #     - "1521:1521"  # Puerto de Oracle
+  #   volumes:
+  #     - ../oracle/cafeteria.sql:/docker-entrypoint-initdb.d/cafeteria.sql  # Importación del archivo SQL
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         cpus: '1'
+  #         memory: 1G
+  #       reservations:
+  #         cpus: '1'
+  #         memory: 1G  
+
+# #SI LA BASE ES FIREBIRD
+  #firebird:
+  #  image: firebirdsql/firebird:latest
+  #  container_name: firebird
+  #  restart: unless-stopped
+  #  environment:
+  #    - FIREBIRD_DATABASE=cafeteria.fdb
+  #    - FIREBIRD_USER=SYSDBA
+  #    - FIREBIRD_PASSWORD=masterkey
+  #  ports:
+  #    - "3050:3050"  # Puerto predeterminado de Firebird
+  #  volumes:
+  #    - ../firebird/cafeteria.fdb:/firebird/data/cafeteria.fdb:Z  # Archivo de base de datos
+  #    - ../firebird/cafeteria.sql:/docker-entrypoint-initdb.d/cafeteria.sql:Z  # Script de inicialización
+  #    - ../firebird/firebird.conf:/opt/firebird/firebird.conf:Z  # Montar el archivo de configuración personalizado
+  #  deploy:
+  #        resources:
+  #          limits:
+  #            cpus: '1'
+  #            memory: 1G
+  #          reservations:
+  #            cpus: '1'
+  #            memory: 1G
+
+# #SI LA BASE DE DATOS ES POSTGRESQL
+#   postgres:
+#       image: postgres:15-alpine
+#       container_name: postgres
+#       restart: unless-stopped
+#       environment:
+#         POSTGRES_USER: admin
+#         POSTGRES_PASSWORD: admin
+#         POSTGRES_DB: cafeteria
+#       ports:
+#         - "5432:5432"
+#       volumes:
+#         - ../postgressql/cafeteria.sql:/docker-entrypoint-initdb.d/cafeteria.sql
+#       deploy:
+#         resources:
+#           limits:
+#             cpus: '1'
+#             memory: 1G
+#           reservations:
+#             cpus: '1'
+#             memory: 1G
+
+#Si la base de datos es SqlServer
+  # sqlserver:
+  #     image: mcr.microsoft.com/mssql/server:2017-latest
+  #     container_name: sqlserver1
+  #     restart: unless-stopped
+  #     environment:
+  #       ACCEPT_EULA: "Y"
+  #       SA_PASSWORD: "Arevalo123_"
+  #       MSSQL_ENCRYPT: "0"
+        
+  #     ports:
+  #       - "1433:1433"
+  #     volumes:
+  #       - ../sqlserver/cafeteria.sql:/docker-entrypoint-initdb.d/cafeteria.sql
+  #     entrypoint: >
+  #       /bin/bash -c "
+  #         echo 'Iniciando SQL Server...' && \
+  #         /opt/mssql/bin/sqlservr & \
+  #         sleep 40 && \
+  #         # QUITAMOS -N y --TrustServerCertificate. SQL Server no encriptará.
+  #         until /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P 'Arevalo123_' -Q 'SELECT 1' > /dev/null 2>&1; \
+  #         do echo 'Esperando que SQL Server esté listo...'; sleep 5; done; \
+  #         echo 'SQL Server está listo. Comprobando script...' ; \
+  #         if [ -f /docker-entrypoint-initdb.d/cafeteria.sql ]; then \
+  #           echo 'SQL Server está listo. Ejecutando script...' && \
+  #           /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P 'Arevalo123_' -d master -i /docker-entrypoint-initdb.d/cafeteria.sql; \
+  #         else \
+  #           echo 'Error: No se encontró el archivo SQL.'; \
+  #         fi; \
+  #         tail -f /dev/null
+  #       "

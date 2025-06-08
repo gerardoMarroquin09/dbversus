@@ -1,0 +1,29 @@
+#Este es el docker compose para levantar un contenedor de postgresSQL
+#No hay ningun volumen porque la data es temporal, solo para las pruebas
+# version de postgres 15-alpine
+# se usa un user admin y pwd admin
+#el esquema se importa del archivo cafeteria.sql
+#el cual se copia en la carpeta /docker-entrypoint-initdb.d
+#limitamos el procesador y mejoria de contenedor
+#levante con docker-compose up -d
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: adminpassword
+      POSTGRES_DB: cafeteria
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '1'
+          memory: 1G

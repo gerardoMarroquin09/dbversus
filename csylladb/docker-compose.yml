@@ -1,0 +1,36 @@
+services:
+  scylla:
+    image: scylladb/scylla:latest
+    container_name: scylla_container
+    restart: unless-stopped
+    ports:
+      - "9042:9042"
+    command: --smp 1 --memory 500M --developer-mode 1
+    healthcheck:
+      test: ["CMD-SHELL", "nodetool status || exit 1"]
+      interval: 10s
+      timeout: 15s
+      retries: 3
+    environment:
+      - SCYLLA_DEVELOPER_MODE=1
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '1'
+          memory: 1G
+
+  init-script:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: scylla_init
+    depends_on:
+      scylla:
+        condition: service_healthy
+    environment:
+      SCYLLA_HOST: scylla
+      DB_NAME: cafeteria
+    restart: "no"

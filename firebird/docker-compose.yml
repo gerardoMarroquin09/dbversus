@@ -1,0 +1,24 @@
+version: '3.8'
+services:
+  firebird:
+    image: firebirdsql/firebird:latest
+    container_name: firebird
+    restart: unless-stopped
+    environment:
+      - FIREBIRD_DATABASE=cafeteria.fdb
+      - FIREBIRD_USER=SYSDBA
+      - FIREBIRD_PASSWORD=masterkey
+    ports:
+      - "3050:3050"  # Puerto predeterminado de Firebird
+    volumes:
+      - ./cafeteria.fdb:/firebird/data/cafeteria.fdb:Z  # Archivo de base de datos
+      - ./cafeteria.sql:/docker-entrypoint-initdb.d/cafeteria.sql:Z  # Script de inicialización
+      - ./firebird.conf:/opt/firebird/firebird.conf:Z  # Montar el archivo de configuración personalizado
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '1'
+          memory: 1G

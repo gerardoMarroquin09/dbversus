@@ -1,0 +1,9 @@
+{
+  "name": "scylladb-init",
+  "version": "1.0.0",
+  "description": "Script de inicialización para ScyllaDB",
+  "main": "init-script.js",
+  "dependencies": {
+    "cassandra-driver": "^4.8.0"
+  }
+}

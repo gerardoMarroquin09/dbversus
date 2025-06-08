@@ -1,0 +1,32 @@
+#Este es el docker compose para levantar un contenedor de mysql
+#No hay ningun volumen porque la data es temporal, solo para las pruebas
+# version de mysql 8.0-debian
+# se usa sin password de root
+#el esquema se importa del archivo cafeteria.sql
+#el cual se copia en la carpeta /docker-entrypoint-initdb.d
+#limitamos el procesador y mejoria de contenedor
+#levante con docker-compose up -d
+services:
+  mysql:
+    image: mysql:8.0-debian
+    container_name: mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"      
+      MYSQL_DATABASE: cafeteria      
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./cafeteria.sql:/docker-entrypoint-initdb.d/cafeteria.sql
+    deploy:
+          resources:
+            limits:
+              cpus: '1'
+              memory: 1G
+            reservations:
+              cpus: '0.5'
+              memory: 256M    
+    
+    
+
+    
