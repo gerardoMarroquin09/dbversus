@@ -13,10 +13,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - HOST_DB=couchdb
-    # depends_on:
-    #   scylla:
-    #     condition: service_healthy
+      - HOST_DB=scylla_container
     deploy:
           resources:
             limits:
@@ -86,41 +83,35 @@ services:
   #       reservations:
   #         cpus: '1'
   #         memory: 1G
-# #SI LA BASE DE DATOS ES SCYLLADB
-#   scylla:
-#     image: scylladb/scylla:latest
-#     container_name: scylla_container
-#     restart: unless-stopped
-#     ports:
-#       - "9042:9042"
-#     command: --smp 1 --memory 500M --developer-mode 1
-#     healthcheck:
-#       test: ["CMD-SHELL", "nodetool status || exit 1"]
-#       interval: 30s
-#       timeout: 10s
-#       retries: 5
-#       start_period: 30s
-#     environment:
-#       - SCYLLA_DEVELOPER_MODE=1
-#     deploy:
-#       resources:
-#         limits:
-#           cpus: '1'
-#           memory: 1G
-#         reservations:
-#           cpus: '1'
-#           memory: 1G
-#     networks:
-#       - scylla-net
-#     volumes:
-#       - scylla_data:/var/lib/scylla
+#SI LA BASE DE DATOS ES SCYLLADB
+  scylla:
+    image: scylladb/scylla:5.4
+    container_name: scylla_container
+    restart: unless-stopped
+    ports:
+      - "9042:9042"
+    command: --smp 1 --memory 750M --developer-mode 1
+    environment:
+      - SCYLLA_DEVELOPER_MODE=1
+    volumes:
+      - ../csylladb/init.cql:/init.cql
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'DESCRIBE KEYSPACES' || exit 1"]
+      interval: 20s
+      timeout: 10s
+      retries: 10
 
-# networks:
-#   scylla-net:
-#     driver: bridge
-
-# volumes:
-#   scylla_data:
+  initdb:
+    image: scylladb/scylla:5.4
+    depends_on:
+      scylla:
+        condition: service_healthy
+    entrypoint: ["/bin/bash", "-c", "cqlsh scylla 9042 -f /init.cql"]
+    volumes:
+      - ../csylladb/init.cql:/init.cql
+    environment:
+      - CQLSH_HOST=scylla
+    restart: "no"
 # #SI LA BASE ES RETHINKDB
   # rethinkdb:
   #   image: rethinkdb:2.4

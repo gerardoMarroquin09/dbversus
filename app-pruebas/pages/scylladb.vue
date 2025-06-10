@@ -68,6 +68,15 @@
             {{ avance }}%
           </q-circular-progress>
         </div>
+        <!-- Mostrar si esta conectado -->
+        <div>
+          <q-banner v-if="conectado" color="green">
+            Conectado a ScyllaDB
+          </q-banner>
+          <q-banner v-else color="red">
+            No conectado a ScyllaDB
+          </q-banner>
+        </div>
       </div>
     </div>
 
@@ -143,7 +152,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue"
+import { computed, ref, onMounted } from "vue"
 
 import {
   categoriasActualizarScylladb,
@@ -186,6 +195,7 @@ const erroresEliminacion = ref<number>(0)
 const cargando = ref<boolean>(false)
 const totalPruebas = ref<number>(19)
 const mensajes = ref<string[]>([])
+const conectado = ref(false)
 
 //propiedad computada del porcentaje de pruebas realizadas
 const avance = computed(() => {
@@ -366,4 +376,24 @@ async function realizarPruebas() {
     console.error(error)
   }
 }
+
+async function verificarConexion() {
+  try {
+    const response = await $fetch("/api/scylladb/categorias", {
+      method: "GET",
+    })
+    if(response.length === 0) {
+      console.log("Conexión exitosa a ScyllaDB:", response)
+      mensajes.value.push("Conexión exitosa a ScyllaDB")
+      conectado.value = true
+    }
+  } catch (error) {
+    conectado.value = false
+    console.error("Error al conectar con ScyllaDB:", error)
+    mensajes.value.push("Error al conectar con ScyllaDB")
+  }
+}
+onMounted(() => {
+  verificarConexion()
+})
 </script>
