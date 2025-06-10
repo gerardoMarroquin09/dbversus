@@ -9,75 +9,75 @@
 //implementamos esta consulta sql en sequelize y el filtro por fecha se pasa como parametro
 
 // SE DEBE INVOCAR ASI
-//http://localhost:3000/api/mysql/resumenes/productosdiariosfecha?fecha=2024-01-02
+///api/mysql/resumenes/productosdiariosfecha?fecha=2024-01-02
 
 // Implementacion en scylladb
 
-import { scylladb } from "../../../utils/scylladb/scylladb"; // Importa la conexión de scylladb
+import { scylladb } from "../../../utils/scylladb/scylladb" // Importa la conexión de scylladb
 
 export default defineEventHandler(async (event) => {
   try {
     // Obtener la fecha del query parameter
-    const { fecha } = getQuery(event);
+    const { fecha } = getQuery(event)
 
     // Validar que la fecha esté presente
     if (!fecha) {
-      return { statusCode: 400, error: "La fecha es requerida" };
+      return { statusCode: 400, error: "La fecha es requerida" }
     }
 
     // 1. Obtener las órdenes que coinciden con la fecha
     const ordenesQuery =
-      "SELECT id, fecha FROM cafeteria.ordenes WHERE fecha = ? ALLOW FILTERING;";
+      "SELECT id, fecha FROM cafeteria.ordenes WHERE fecha = ? ALLOW FILTERING;"
     const ordenesResult = await scylladb.execute(ordenesQuery, [fecha], {
       prepare: true,
-    });
+    })
 
     // Array para almacenar los resultados finales
-    const data = [];
+    const data = []
 
     // 2. Procesar cada orden
     for (const orden of ordenesResult.rows) {
       // Obtener los detalles de la orden
       const detalleQuery =
-        "SELECT idOrden, idProducto, cantidad FROM cafeteria.detalleordenes WHERE idOrden = ? ALLOW FILTERING;";
+        "SELECT idOrden, idProducto, cantidad FROM cafeteria.detalleordenes WHERE idOrden = ? ALLOW FILTERING;"
       const detalleResult = await scylladb.execute(detalleQuery, [orden.id], {
         prepare: true,
-      });
+      })
 
       // Procesar cada detalle de la orden
       for (const detalle of detalleResult.rows) {
         // Obtener el producto correspondiente
         const productoQuery =
-          "SELECT id, nombre FROM cafeteria.productos WHERE id = ? ALLOW FILTERING;";
+          "SELECT id, nombre FROM cafeteria.productos WHERE id = ? ALLOW FILTERING;"
         const productoResult = await scylladb.execute(
           productoQuery,
           [detalle.idProducto],
           { prepare: true }
-        );
+        )
 
         // Si se encuentra el producto, agregar los datos al resultado final
         if (productoResult.rows.length > 0) {
-          const producto = productoResult.rows[0];
+          const producto = productoResult.rows[0]
           data.push({
             fecha: orden.fecha.toISOString().split("T")[0], // Formato YYYY-MM-DD
             idOrden: orden.id,
             idProducto: detalle.idProducto,
             nombreProducto: producto.nombre,
             cantidad: detalle.cantidad,
-          });
+          })
         }
       }
     }
 
     // 3. Agrupar los resultados por fecha
     const groupedData = data.reduce((acc: { [key: string]: any[] }, item) => {
-      const fecha = item.fecha;
+      const fecha = item.fecha
       if (!acc[fecha]) {
-        acc[fecha] = [];
+        acc[fecha] = []
       }
-      acc[fecha].push(item);
-      return acc;
-    }, {});
+      acc[fecha].push(item)
+      return acc
+    }, {})
 
     // 4. Ordenar los resultados por fecha
     const sortedData = Object.keys(groupedData)
@@ -85,14 +85,14 @@ export default defineEventHandler(async (event) => {
       .map((fecha) => ({
         fecha,
         detalles: groupedData[fecha],
-      }));
+      }))
 
-    return { statusCode: 200, data: sortedData };
+    return { statusCode: 200, data: sortedData }
   } catch (error) {
-    console.error("Error productosdiarios:", error);
-    return { statusCode: 500, error: "Internal Server Error" };
+    console.error("Error productosdiarios:", error)
+    return { statusCode: 500, error: "Internal Server Error" }
   }
-});
+})
 
 // import { scylladb } from "../../../utils/scylladb/scylladb";
 

@@ -85,31 +85,33 @@ services:
   #         memory: 1G
 #SI LA BASE DE DATOS ES SCYLLADB
   scylla:
-    image: scylladb/scylla:latest
+    image: scylladb/scylla:5.4
     container_name: scylla_container
     restart: unless-stopped
     ports:
       - "9042:9042"
-    command: --smp 1 --memory 1G --developer-mode 1
-    healthcheck:
-      test: ["CMD-SHELL", "nodetool status || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 30s
+    command: --smp 1 --memory 750M --developer-mode 1
     environment:
       - SCYLLA_DEVELOPER_MODE=1
     volumes:
       - ../csylladb/init.cql:/init.cql
-    deploy:
-      resources:
-        limits:
-          cpus: '1'
-          memory: 1G
-        reservations:
-          cpus: '1'
-          memory: 1G
-    entrypoint: ["/bin/bash", "-c", "(/docker-entrypoint.py --developer-mode=1 &) && sleep 30 && cqlsh -f /init.cql && wait"]
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'DESCRIBE KEYSPACES' || exit 1"]
+      interval: 20s
+      timeout: 10s
+      retries: 10
+
+  initdb:
+    image: scylladb/scylla:5.4
+    depends_on:
+      scylla:
+        condition: service_healthy
+    entrypoint: ["/bin/bash", "-c", "cqlsh scylla 9042 -f /init.cql"]
+    volumes:
+      - ../csylladb/init.cql:/init.cql
+    environment:
+      - CQLSH_HOST=scylla
+    restart: "no"
 # #SI LA BASE ES RETHINKDB
   # rethinkdb:
   #   image: rethinkdb:2.4
